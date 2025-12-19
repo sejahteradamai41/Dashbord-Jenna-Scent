@@ -107,5 +107,68 @@ with col2:
 # ====================================================
 # INFORMASI PERIODE
 # ====================================================
+st.markdown("## 📌 Ringkasan Penjualan")
+
+kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+
+with kpi1:
+    st.metric("Total Terjual", int(df["Quantity"].sum()))
+
+with kpi2:
+    st.metric("Jumlah Varian", df["Varian"].nunique())
+
+with kpi3:
+    if "Aroma" in df.columns:
+        st.metric("Jumlah Aroma", df["Aroma"].nunique())
+    else:
+        st.metric("Jumlah Aroma", "—")
+
+with kpi4:
+    st.metric("Total Stok", int(df["Stok Barang"].sum()))
+st.markdown("## 📊 Total Penjualan per Varian")
+
+
+varian_total = df.groupby("Varian")["Quantity"].sum().reset_index()
+
+fig_bar = px.bar(
+    varian_total,
+    x="Varian",
+    y="Quantity",
+    title="Total Penjualan per Varian"
+)
+
+st.plotly_chart(fig_bar, use_container_width=True)
+
+st.markdown("## ❤️ Varian Paling Disukai")
+
+fig_varian = px.pie(
+    varian_total,
+    names="Varian",
+    values="Quantity",
+    hole=0.4
+)
+
+st.plotly_chart(fig_varian, use_container_width=True)
+
+if "Aroma" in df.columns:
+    aroma_laris = df.groupby("Aroma")["Quantity"].sum().reset_index()
+
+    st.markdown("## 🌸 Aroma Terlaris")
+
+    fig_aroma = px.pie(
+        aroma_laris,
+        names="Aroma",
+        values="Quantity",
+        hole=0.4
+    )
+
+    st.plotly_chart(fig_aroma, use_container_width=True)
+st.markdown("## 📦 Ringkasan Stok Barang")
+
+stok_df = df.groupby("Varian")["Stok Barang"].sum().reset_index()
+st.dataframe(stok_df, use_container_width=True)
+st.markdown("## 📋 Data Lengkap Penjualan")
+st.dataframe(df, use_container_width=True)
+
 st.markdown(f"### 📅 Periode Data: **{label_periode}**")
 
