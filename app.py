@@ -121,6 +121,21 @@ with col4:
         "No", "Tanggal", "Varian", "Quantity", "Harga Barang", "HPP", "Stok Barang"
     ]]
     st.dataframe(data_barang, use_container_width=True)
+    # ====================================================
+# 3. FILTER WAKTU (HARIAN, MINGGUAN, BULANAN, TAHUNAN)
+# ====================================================
+
+# LOGO DI SIDEBAR (ATAS FILTER)
+if image:
+    st.sidebar.image(image, width=180)
+
+st.sidebar.markdown("---")  # garis pemisah (opsional)
+
+df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce")
+df = df.dropna(subset=["Tanggal"])
+
+st.sidebar.header("⏱️ Filter Waktu")
+
 
 # ====================================================
 # PIE CHART – VARIAN PALING LARIS
