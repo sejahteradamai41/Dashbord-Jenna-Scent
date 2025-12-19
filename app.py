@@ -28,13 +28,8 @@ except FileNotFoundError:
 # ====================================================
 # 3. FILTER WAKTU (HARIAN, MINGGUAN, BULANAN, TAHUNAN)
 # ====================================================
-# ====================================================
-# 3. FILTER WAKTU (HARIAN, MINGGUAN, BULANAN, TAHUNAN)
-# ====================================================
 df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce")
 df = df.dropna(subset=["Tanggal"])
-
-st.sidebar.header("⏱️ Filter Waktu")
 
 mode_waktu = st.sidebar.selectbox(
     "Pilih Periode",
