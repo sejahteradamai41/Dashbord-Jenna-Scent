@@ -10,12 +10,18 @@ st.markdown('<style>div.block-container{padding-top:1rem;}</style>', unsafe_allo
 # ====================================================
 # 1. LOAD LOGO
 # ====================================================
+try:
+    image = Image.open("Jenna-Logo.jpeg")
+except FileNotFoundError:
+    st.warning("⚠️ File 'Jenna-Logo.jpeg' tidak ditemukan.")
+    image = None
+
 # ====================================================
 # SIDEBAR : LOGO + FILTER WAKTU
 # ====================================================
 
 # 1. LOGO PALING ATAS (KIRI)
-if image:
+if image is not None:
     st.sidebar.image(image, width=200)
 
 st.sidebar.markdown("---")
@@ -32,7 +38,6 @@ mode_waktu = st.sidebar.selectbox(
     "Pilih Periode",
     ["Harian", "Mingguan", "Bulanan", "Tahunan"]
 )
-
 # 5. LOGIKA FILTER
 if mode_waktu == "Harian":
     tanggal_pilih = st.sidebar.date_input(
