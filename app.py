@@ -10,32 +10,63 @@ st.markdown('<style>div.block-container{padding-top:1rem;}</style>', unsafe_allo
 # ====================================================
 # 1. LOAD LOGO
 # ====================================================
-try:
-    image = Image.open("Jenna-Logo.jpeg")
-except FileNotFoundError:
-    st.warning("⚠️ File 'Jenna-Logo.jpeg' tidak ditemukan.")
-    image = None
+# ====================================================
+# SIDEBAR : LOGO + FILTER WAKTU
+# ====================================================
 
-# ====================================================
-# 2. LOAD DATA EXCEL
-# ====================================================
-try:
-    df = pd.read_excel("penjualan-jenna.xlsx")
-except FileNotFoundError:
-    st.error("❌ File 'penjualan-jenna.xlsx' tidak ditemukan.")
-    st.stop()
+# 1. LOGO PALING ATAS (KIRI)
+if image:
+    st.sidebar.image(image, width=200)
 
-# ====================================================
-# 3. FILTER WAKTU (HARIAN, MINGGUAN, BULANAN, TAHUNAN)
-# ====================================================
+st.sidebar.markdown("---")
+
+# 2. JUDUL FILTER
+st.sidebar.header("⏱️ Filter Waktu")
+
+# 3. KONVERSI & CLEAN TANGGAL
 df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce")
 df = df.dropna(subset=["Tanggal"])
 
+# 4. PILIH MODE WAKTU
 mode_waktu = st.sidebar.selectbox(
     "Pilih Periode",
     ["Harian", "Mingguan", "Bulanan", "Tahunan"]
 )
 
+# 5. LOGIKA FILTER
+if mode_waktu == "Harian":
+    tanggal_pilih = st.sidebar.date_input(
+        "Pilih Tanggal",
+        df["Tanggal"].max().date()
+    )
+    df_filter = df[df["Tanggal"].dt.date == tanggal_pilih]
+    label_periode = tanggal_pilih.strftime("%d %B %Y")
+
+elif mode_waktu == "Mingguan":
+    df["Minggu"] = df["Tanggal"].dt.to_period("W").astype(str)
+    minggu_pilih = st.sidebar.selectbox(
+        "Pilih Minggu",
+        sorted(df["Minggu"].unique())
+    )
+    df_filter = df[df["Minggu"] == minggu_pilih]
+    label_periode = f"Minggu {minggu_pilih}"
+
+elif mode_waktu == "Bulanan":
+    df["Bulan"] = df["Tanggal"].dt.to_period("M").astype(str)
+    bulan_pilih = st.sidebar.selectbox(
+        "Pilih Bulan",
+        sorted(df["Bulan"].unique())
+    )
+    df_filter = df[df["Bulan"] == bulan_pilih]
+    label_periode = bulan_pilih
+
+elif mode_waktu == "Tahunan":
+    tahun_pilih = st.sidebar.selectbox(
+        "Pilih Tahun",
+        sorted(df["Tanggal"].dt.year.unique())
+    )
+    df_filter = df[df["Tanggal"].dt.year == tahun_pilih]
+    label_periode = f"Tahun {tahun_pilih}"
 if mode_waktu == "Harian":
     tanggal_pilih = st.sidebar.date_input(
         "Pilih Tanggal",
