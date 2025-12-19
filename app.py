@@ -107,4 +107,5 @@ with col2:
 # ====================================================
 # INFORMASI PERIODE
 # ====================================================
-st.markdown(f"### 📅 Periode Data:
+st.markdown(f"### 📅 Periode Data: **{label_periode}**")
+
