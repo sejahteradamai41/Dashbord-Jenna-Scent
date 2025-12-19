@@ -108,7 +108,13 @@ st.markdown(f"### 📅 Periode Data: **{label_periode}**")
 # ====================================================
 # KPI (IKUT FILTER)
 # ====================================================
-k1, k2, k3, k4 = st.columns(4)
+k0, k1, k2, k3, k4 = st.columns(5)
+
+with k0:
+    st.metric(
+        "Total Terjual (Keseluruhan)",
+        int(df["Quantity"].sum())
+    )
 
 with k1:
     st.metric("Total Terjual", int(df_filter["Quantity"].sum()))
