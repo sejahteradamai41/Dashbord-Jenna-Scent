@@ -94,6 +94,7 @@ if df_filter.empty:
 # ====================================================
 # HEADER
 # ====================================================
+col1, col2 = st.columns([0.12, 0.88])
 with col1:
     if image:
         st.image(image, width=150)
