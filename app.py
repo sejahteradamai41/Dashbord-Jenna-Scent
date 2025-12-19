@@ -19,12 +19,12 @@ except FileNotFoundError:
 
 # ====================================================
 # 2. LOAD DATA EXCEL
-# Pastikan nama file persis: penjualan -jenna.xlsx
+# Pastikan nama file persis: penjualan-jenna.xlsx
 # ====================================================
 try:
-    df = pd.read_excel("penjualan -jenna.xlsx")
+    df = pd.read_excel("penjualan-jenna.xlsx")
 except FileNotFoundError:
-    st.error("❌ File 'penjualan -jenna.xlsx' tidak ditemukan. Pastikan berada 1 folder dengan app.py")
+    st.error("❌ File 'penjualan-jenna.xlsx' tidak ditemukan. Pastikan berada 1 folder dengan app.py")
     st.stop()
 
 # ====================================================
