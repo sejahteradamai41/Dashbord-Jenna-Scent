@@ -121,7 +121,7 @@ if df_filter.empty:
 col1, col2 = st.columns([0.12, 0.88])
 with col1:
     if logo:
-        st.image(logo, width=120)
+        st.image(logo, width=200)
 
 with col2:
     st.markdown(
