@@ -4,18 +4,69 @@ from PIL import Image
 import plotly.express as px
 
 # ====================================================
-# KONFIGURASI HALAMAN
+# PAGE CONFIG
 # ====================================================
-st.set_page_config(layout="wide")
-st.markdown('<style>div.block-container{padding-top:1rem;}</style>', unsafe_allow_html=True)
+st.set_page_config(
+    page_title="Dashboard Penjualan Jenna Scent",
+    layout="wide"
+)
+
+# ====================================================
+# SIDEBAR – THEME & MODE
+# ====================================================
+st.sidebar.header("⚙️ Pengaturan Dashboard")
+
+tema = st.sidebar.radio(
+    "🎨 Tema Tampilan",
+    ["Dark Mode", "Light Mode"],
+    index=0
+)
+
+mode_tampilan = st.sidebar.selectbox(
+    "🧩 Mode Tampilan",
+    ["Sidang", "Laporan"]
+)
+
+# ====================================================
+# THEME STYLE
+# ====================================================
+if tema == "Dark Mode":
+    bg_color = "#0f172a"
+    card_color = "#111827"
+    text_color = "#e5e7eb"
+    sub_text = "#9ca3af"
+else:
+    bg_color = "#f8fafc"
+    card_color = "#ffffff"
+    text_color = "#111827"
+    sub_text = "#6b7280"
+
+st.markdown(
+    f"""
+    <style>
+    body {{
+        background-color: {bg_color};
+        color: {text_color};
+    }}
+    .kpi-card {{
+        background-color: {card_color};
+        padding: 18px;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # ====================================================
 # LOAD LOGO
 # ====================================================
 try:
-    image = Image.open("Jenna-Logo.jpeg")
-except FileNotFoundError:
-    image = None
+    logo = Image.open("Jenna-Logo.jpeg")
+except:
+    logo = None
 
 # ====================================================
 # LOAD DATA
@@ -25,70 +76,43 @@ df.columns = df.columns.str.strip()
 df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce")
 df = df.dropna(subset=["Tanggal"])
 
-# ====================================================
-# SIDEBAR : LOGO + FILTER
-# ====================================================
-if image:
-    st.sidebar.image(image, width=200)
+df["Bulan"] = df["Tanggal"].dt.to_period("M").astype(str)
+df["Tahun"] = df["Tanggal"].dt.year
+df["Minggu"] = df["Tanggal"].dt.to_period("W").astype(str)
 
+# ====================================================
+# SIDEBAR – FILTER WAKTU
+# ====================================================
 st.sidebar.markdown("---")
 st.sidebar.header("⏱️ Filter Waktu")
 
 mode_waktu = st.sidebar.selectbox(
     "Pilih Periode",
-    ["Bulanan", "Tahunan", "Mingguan", "Harian"],
-    index=0  # default BULANAN
+    ["Harian", "Mingguan", "Bulanan", "Tahunan"]
 )
 
-# ====================================================
-# FILTER LOGIC (DEFAULT OKTOBER 2024)
-# ====================================================
-df["Bulan"] = df["Tanggal"].dt.to_period("M").astype(str)
-df["Tahun"] = df["Tanggal"].dt.year
-
-if mode_waktu == "Bulanan":
-    bulan_default = "2024-10"
-    bulan_list = sorted(df["Bulan"].unique())
-    bulan_pilih = st.sidebar.selectbox(
-        "Pilih Bulan",
-        bulan_list,
-        index=bulan_list.index(bulan_default) if bulan_default in bulan_list else 0
-    )
-    df_filter = df[df["Bulan"] == bulan_pilih]
-    label_periode = bulan_pilih
-
-elif mode_waktu == "Tahunan":
-    tahun_list = sorted(df["Tahun"].unique())
-    tahun_pilih = st.sidebar.selectbox(
-        "Pilih Tahun",
-        tahun_list,
-        index=tahun_list.index(2024) if 2024 in tahun_list else 0
-    )
-    df_filter = df[df["Tahun"] == tahun_pilih]
-    label_periode = f"Tahun {tahun_pilih}"
+if mode_waktu == "Harian":
+    tanggal = st.sidebar.date_input("Pilih Tanggal", df["Tanggal"].max().date())
+    df_filter = df[df["Tanggal"].dt.date == tanggal]
+    label_periode = tanggal.strftime("%d %B %Y")
 
 elif mode_waktu == "Mingguan":
-    df["Minggu"] = df["Tanggal"].dt.to_period("W").astype(str)
-    minggu_pilih = st.sidebar.selectbox(
-        "Pilih Minggu",
-        sorted(df["Minggu"].unique())
-    )
-    df_filter = df[df["Minggu"] == minggu_pilih]
-    label_periode = f"Minggu {minggu_pilih}"
+    minggu = st.sidebar.selectbox("Pilih Minggu", sorted(df["Minggu"].unique()))
+    df_filter = df[df["Minggu"] == minggu]
+    label_periode = f"Minggu {minggu}"
 
-else:  # Harian
-    tanggal_pilih = st.sidebar.date_input(
-        "Pilih Tanggal",
-        df["Tanggal"].max().date()
-    )
-    df_filter = df[df["Tanggal"].dt.date == tanggal_pilih]
-    label_periode = tanggal_pilih.strftime("%d %B %Y")
+elif mode_waktu == "Bulanan":
+    bulan = st.sidebar.selectbox("Pilih Bulan", sorted(df["Bulan"].unique()))
+    df_filter = df[df["Bulan"] == bulan]
+    label_periode = bulan
 
-# ====================================================
-# CEK DATA KOSONG
-# ====================================================
+else:
+    tahun = st.sidebar.selectbox("Pilih Tahun", sorted(df["Tahun"].unique()))
+    df_filter = df[df["Tahun"] == tahun]
+    label_periode = f"Tahun {tahun}"
+
 if df_filter.empty:
-    st.warning("⚠️ Tidak ada data untuk periode ini.")
+    st.warning("⚠️ Tidak ada data pada periode ini.")
     st.stop()
 
 # ====================================================
@@ -96,87 +120,108 @@ if df_filter.empty:
 # ====================================================
 col1, col2 = st.columns([0.12, 0.88])
 with col1:
-    if image:
-        st.image(image, width=150)
+    if logo:
+        st.image(logo, width=120)
 
 with col2:
-    st.markdown("<center><h1>Penjualan Jenna Scent</h1></center>", unsafe_allow_html=True)
-
-st.markdown(f"### 📅 Periode Data: **{label_periode}**")
-
-# ====================================================
-# KPI (IKUT FILTER)
-# ====================================================
-k0, k1, k2, k3, k4 = st.columns(5)
-
-with k0:
-    st.metric(
-        "Total Terjual (Keseluruhan)",
-        int(df["Quantity"].sum())
+    st.markdown(
+        """
+        <div style='text-align:center'>
+            <h1 style='margin-bottom:0'>📊 Dashboard Penjualan</h1>
+            <h3 style='font-weight:400; color:gray; margin-top:5px'>
+                Jenna Scent
+            </h3>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
+st.markdown(
+    f"""
+    <div style='
+        display:inline-block;
+        padding:6px 16px;
+        border-radius:20px;
+        background:#1f2937;
+        color:white;
+        margin-bottom:12px;
+        font-size:14px;
+    '>
+        ⏱️ {mode_waktu} • {label_periode}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.caption("Ringkasan performa penjualan berdasarkan periode yang dipilih")
+
+# ====================================================
+# KPI FUNCTION
+# ====================================================
+def kpi(title, value, subtitle=""):
+    st.markdown(
+        f"""
+        <div class='kpi-card'>
+            <h4>{title}</h4>
+            <h1>{value}</h1>
+            <span style='color:{sub_text}'>{subtitle}</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+# ====================================================
+# KPI SECTION
+# ====================================================
+k1, k2, k3, k4, k5 = st.columns(5)
+
 with k1:
-    st.metric("Total Terjual", int(df_filter["Quantity"].sum()))
+    kpi("Total Terjual", int(df_filter["Quantity"].sum()), "Periode terpilih")
 
 with k2:
-    st.metric("Jumlah Varian", df_filter["Varian"].nunique())
+    kpi("Jumlah Varian", df_filter["Varian"].nunique())
 
 with k3:
-    st.metric("Jumlah Aroma", df_filter["Aroma"].nunique() if "Aroma" in df_filter.columns else "—")
+    kpi("Jumlah Aroma", df_filter["Aroma"].nunique() if "Aroma" in df_filter.columns else "-")
 
 with k4:
-    st.metric("Total Stok", int(df_filter["Stok Barang"].sum()))
+    kpi("Total Stok", int(df_filter["Stok Barang"].sum()))
+
+with k5:
+    kpi("Total Transaksi", len(df_filter))
 
 # ====================================================
-# BAR CHART
+# CHART – VARIAN
 # ====================================================
 st.markdown("## 📊 Total Penjualan per Varian")
-
 varian_total = df_filter.groupby("Varian")["Quantity"].sum().reset_index()
 
 fig_bar = px.bar(
     varian_total,
     x="Varian",
     y="Quantity",
-    title="Total Penjualan per Varian"
+    text_auto=True
 )
 st.plotly_chart(fig_bar, use_container_width=True)
 
 # ====================================================
-# PIE VARIAN
+# PIE – VARIAN & AROMA
 # ====================================================
-st.markdown("## ❤️ Varian Paling Disukai")
+c1, c2 = st.columns(2)
 
-fig_varian = px.pie(
-    varian_total,
-    names="Varian",
-    values="Quantity",
-    hole=0.4
-)
-st.plotly_chart(fig_varian, use_container_width=True)
+with c1:
+    fig_varian = px.pie(varian_total, names="Varian", values="Quantity", hole=0.4)
+    st.plotly_chart(fig_varian, use_container_width=True)
 
-# ====================================================
-# PIE AROMA
-# ====================================================
-if "Aroma" in df_filter.columns:
-    st.markdown("## 🌸 Aroma Terlaris")
-
-    aroma_laris = df_filter.groupby("Aroma")["Quantity"].sum().reset_index()
-
-    fig_aroma = px.pie(
-        aroma_laris,
-        names="Aroma",
-        values="Quantity",
-        hole=0.4
-    )
-    st.plotly_chart(fig_aroma, use_container_width=True)
+with c2:
+    if "Aroma" in df_filter.columns:
+        aroma_total = df_filter.groupby("Aroma")["Quantity"].sum().reset_index()
+        fig_aroma = px.pie(aroma_total, names="Aroma", values="Quantity", hole=0.4)
+        st.plotly_chart(fig_aroma, use_container_width=True)
 
 # ====================================================
-# STOK & DATA
+# DETAIL DATA (MODE LAPORAN)
 # ====================================================
-st.markdown("## 📦 Ringkasan Stok Barang")
-stok_df = df_filter.groupby("Varian")["Stok Barang"].sum().reset_index()
-st.dataframe(stok_df, use_container_width=True)
-
-st.markdown("## 📋 Data Lengkap Penjualan")
-st.dataframe(df_filter, use_container_width=True)
+if mode_tampilan == "Laporan":
+    st.markdown("## 📋 Data Detail Penjualan")
+    st.dataframe(df_filter, use_container_width=True)
